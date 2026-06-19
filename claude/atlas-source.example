@@ -1,0 +1,10 @@
+https://atlas.paranoid.software
+# ^^^ LINE 1 IS THE ONLY THING THAT MATTERS. atlas-fetch.sh reads the first line of
+#     ~/.claude/atlas-source and ignores the rest.
+#
+# Copy this file to `~/.claude/atlas-source` and set line 1 to ONE source:
+#   - the official site:   https://atlas.paranoid.software   (recommended)
+#   - a local clone:       /Users/you/Code/paranoid-software/atlas
+#   - a local dev server:  http://localhost:8088
+#
+# It's mutually exclusive — a URL (http/https → curl) OR a path (→ cat). One line. Done.
