@@ -1,0 +1,2 @@
+https://atlas.paranoid.software
+# ^ line 1 = the source (a URL or a local clone path). atlas-fetch reads only line 1.
