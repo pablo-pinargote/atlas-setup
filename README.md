@@ -279,47 +279,6 @@ own MCP config (`~/.cursor/mcp.json`) too.
 > Quick check it's live: open an Atlas in Cursor, start a new Agent chat, and ask "what's the
 > state of this Atlas?" without giving context — it should already know from `STATUS.md`.
 
-## 9. Using Atlas from Antigravity (real setup)
-
-Antigravity (Google's IDE) does **not** read `~/.claude/`, so it needs its own setup. It uses
-`~/.gemini/` for everything. From this folder, in Terminal / Git Bash:
-
-```bash
-mkdir -p ~/.gemini/skills/workspace-baseline
-
-cp gemini/atlas-fetch.sh                         ~/.gemini/atlas-fetch.sh
-cp gemini/skills/workspace-baseline/SKILL.md     ~/.gemini/skills/workspace-baseline/SKILL.md
-chmod +x ~/.gemini/atlas-fetch.sh
-
-# framework source (one line — URL or local clone)
-printf '%s\n' 'https://atlas.paranoid.software' > ~/.gemini/atlas-source
-```
-
-**Orientation rule.** Antigravity has no Claude-style session hooks, so orientation is an
-**always-on global rule** in `~/.gemini/GEMINI.md`. Append the contents of
-`gemini/GEMINI.atlas-section.md` to your `~/.gemini/GEMINI.md` (don't overwrite — that file is
-**shared with Gemini CLI**, so keep anything already there):
-
-```bash
-cat gemini/GEMINI.atlas-section.md >> ~/.gemini/GEMINI.md
-```
-
-**Memory store (coco/mem0).** Per-tool, like everywhere — add it to Antigravity's MCP config
-`~/.gemini/config/mcp_config.json` when you set up the memory store (deferred).
-
-**Verify:**
-
-```bash
-bash ~/.gemini/atlas-fetch.sh llms.txt | head -3    # should print the framework index
-```
-
-Then in Antigravity: confirm the **`workspace-baseline`** skill shows up (Skills panel) and that
-opening an Atlas orients the agent (the `GEMINI.md` rule). What you get: coco (memory) + the
-skill + the orientation rule + framework access — functional parity with Claude/Cursor. The one
-gap is convenience slash-commands (`/atlas-init`, `/atlas-sync`): the **skill covers that work**
-(ask it to bootstrap/sync); add Antigravity *Workflows* via its UI later if you want the
-shortcuts.
-
 ---
 
 ## Troubleshooting
@@ -339,16 +298,11 @@ shortcuts.
 atlas-setup/
 ├── README.md                  ← this guide
 ├── gen_workspaces.py          ← the Atlas generator (you copy it in step 2)
-├── claude/                    ← Claude Code machinery (step 4) — Cursor inherits it via interop
-│   ├── atlas-fetch.sh
-│   ├── atlas-source.example   ← reference only (step 4.3 creates the real one)
-│   ├── hooks/                 ← session-orient · atlas-sync-reminder · skill-reminder
-│   ├── commands/              ← /atlas-init · /atlas-sync
-│   └── skills/workspace-baseline/SKILL.md
-└── gemini/                    ← Antigravity setup (step 9) — its own ~/.gemini/ files
+└── claude/                    ← Claude Code machinery (step 4) — Cursor inherits it via interop
     ├── atlas-fetch.sh
-    ├── atlas-source.example
-    ├── GEMINI.atlas-section.md ← append to ~/.gemini/GEMINI.md (orientation rule)
+    ├── atlas-source.example   ← reference only (step 4.3 creates the real one)
+    ├── hooks/                 ← session-orient · atlas-sync-reminder · skill-reminder
+    ├── commands/              ← /atlas-init · /atlas-sync
     └── skills/workspace-baseline/SKILL.md
 ```
 
@@ -358,4 +312,3 @@ atlas-setup/
 |---|---|---|---|
 | **Claude Code** | its own config | native (`~/.claude/`) | steps 1–7 |
 | **Cursor** | its own config | **inherits Claude's** via interop | nothing (just verify) |
-| **Antigravity** | its own config (`~/.gemini/...`) | **its own** (`~/.gemini/`) | step 9 |
