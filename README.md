@@ -253,7 +253,9 @@ This creates `~/workspaces/demo/_first/` with a symlink to each repo.
 ```
 
 It fetches the recipe from the framework and creates `CLAUDE.md` (a per-repo block per symlink),
-`STATUS.md`, `BACKLOG.md`, `DEVIATIONS.md`, `_archived/`, and `.claude/settings.local.json`.
+`STATUS.md`, `BACKLOG.md`, `DEVIATIONS.md`, `_archived/`, `.claude/settings.local.json`, and
+`.vscode/settings.json` (so VS Code and Cursor show each repo in Source Control — reload the
+window once).
 
 ## 7. Day to day
 

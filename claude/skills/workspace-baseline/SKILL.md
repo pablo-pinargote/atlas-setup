@@ -24,8 +24,8 @@ Returns the Atlas framework:
 - **The Atlas model** (`method/01-the-atlas.md`) — an **Atlas** is a symlink-aggregator project root; why it exists.
 - **The stores model** (`method/02-stores-model.md`) — where each kind of knowledge lives; the decision tree.
 - **Atlas anatomy** (`method/03-atlas-anatomy.md`) — the root files of record (incl. `STATUS.md`), naming, the per-repo orientation block.
-- **The SPEC lifecycle** (`method/04-spec-lifecycle.md`) — READY → IN PROGRESS → IN REVIEW → SHIPPED → archived.
-- **The discipline** (`method/05-discipline.md`) — small deliverable specs; review before shipped; clean baseline; commit-message hygiene.
+- **The SPEC lifecycle** (`method/04-spec-lifecycle.md`) — READY → IN PROGRESS → IN REVIEW → SHIPPED → archived. A SPEC = what + Plan (the route only); no state, no how, no code, no checkboxes. The how is decided live and its record is the code. Resume from `STATUS → Active` (Done / Next / Blocked).
+- **The discipline** (`method/05-discipline.md`) — small deliverable specs; review before shipped; clean baseline; commit-message hygiene; no archaeology (files of record are snapshots, never logs).
 - **The bootstrap recipe + Atlas `CLAUDE.md` template** (`method/06-bootstrap.md`).
 - **Optional git-versioning** (`method/07-optional-git-versioning.md`).
 
@@ -40,7 +40,7 @@ Returns the Atlas framework:
 Two user-global slash commands operate on an Atlas; both are thin wrappers that fetch and follow the canonical recipe/model in the Atlas framework (`atlas-fetch.sh`):
 
 - **`/atlas-init`** — bootstrap the current directory as a new Atlas (discovers symlinks, creates `CLAUDE.md` with per-repo blocks, `.claude/settings.local.json`, `STATUS.md`, `BACKLOG.md`, `DEVIATIONS.md`, `_archived/`). Pre-flight stops if a baseline already exists or there are no symlinks.
-- **`/atlas-sync`** — reconcile an existing Atlas: regenerate `STATUS.md` and, when the repo set changed, add/remove per-repo orientation blocks (sync owns adding/removing repos — init does not).
+- **`/atlas-sync`** — checkpoint an existing Atlas: refresh `STATUS.md` (rewrite each in-flight SPEC's Active block — Done / Next / Blocked; move shipped SPECs to Recently shipped), reconcile the repo set (add/remove per-repo blocks — sync owns this, init does not), lint SPECs for contamination (state, checkboxes, code, how, archaeology), and update `CLAUDE.md` only if a standing fact changed.
 
 Memory mechanism: a `SessionStart` hook (`session-orient.sh`) injects `STATUS.md` at start; a `Stop` hook (`atlas-sync-reminder.sh`) nudges the agent to offer `/atlas-sync` when `STATUS.md` goes stale (throttled). There is no automatic write — checkpointing is deliberate.
 
