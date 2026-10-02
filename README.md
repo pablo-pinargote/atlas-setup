@@ -6,7 +6,7 @@ back it up first — nothing here overwrites your existing Claude Code config.
 
 > **What Atlas is:** a tool-agnostic, spec-driven way to run large, multi-repo, AI-assisted
 > projects — any agent opens a project cold and knows what it is, where it lives, where the work
-> stands, and how it ships. Full framework: **https://atlas.paranoid.software**.
+> stands, and how work gets closed. Full framework: **https://atlas.paranoid.software**.
 
 > **Deferred (later guide):** the shared **memory store** and the **DEVIATIONS** workflow. The
 > Atlas lifecycle works fully without them.
