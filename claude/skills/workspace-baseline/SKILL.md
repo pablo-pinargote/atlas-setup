@@ -25,7 +25,7 @@ Returns the Atlas framework:
 - **The stores model** (`method/02-stores-model.md`) — where each kind of knowledge lives; the decision tree.
 - **Atlas anatomy** (`method/03-atlas-anatomy.md`) — the root files of record (incl. `STATUS.md`), naming, the per-repo orientation block.
 - **The SPEC lifecycle** (`method/04-spec-lifecycle.md`) — READY → IN PROGRESS → IN REVIEW → CLOSED → archived. CLOSED = verified in the code + a commit + the human says close. A SPEC = what + Plan (the route only); no state, no how, no code, no checkboxes, no findings — blockers, misconceptions, wrongly-posed parts go to `SPEC_NNNN_FINDINGS.md`. The how is decided live and its record is the code. Resume from `STATUS → Active` (Done / Next / Blocked).
-- **The discipline** (`method/05-discipline.md`) — the human gates; one branch per SPEC; small deliverable specs; independent review in the code before close; clean baseline; commit-message hygiene; no archaeology (files of record are snapshots, never logs).
+- **The discipline** (`method/05-discipline.md`) — the cadence (git flow in its steps: branch from `develop`, back to `develop`, never `main`), the drift signals, pausing and resuming a SPEC; the human gates; one branch per SPEC; small deliverable specs; independent review in the code before close; clean baseline; commit-message hygiene; no archaeology (files of record are snapshots, never logs).
 - **The bootstrap recipe + Atlas `CLAUDE.md` template** (`method/06-bootstrap.md`).
 - **Optional git-versioning** (`method/07-optional-git-versioning.md`).
 
@@ -33,6 +33,7 @@ Returns the Atlas framework:
 
 - **Bootstrapping a new Atlas** → follow the recipe (`method/06-bootstrap.md`).
 - **Modifying any Atlas root file of record** (`CLAUDE.md`, `STATUS.md`, `BACKLOG.md`, `SPEC_*.md`, `DRAFT_*.md`, `DEVIATIONS.md`, `_archived/`) → consult the stores model / anatomy (`method/02`, `method/03`) for what goes in each. `STATUS.md` = the living "where we are", injected at session start by the `session-orient.sh` hook; CLAUDE.md = static orientation/why.
+- **Before writing any code**, place yourself in the cadence (`method/05-discipline.md`): is there a SPEC in `STATUS → Active`, and are you on its branch? Check the other drift signals in `05` too. If one shows, say so once and follow the human's call.
 - **Deciding where a piece of knowledge belongs** → use the decision tree in the stores model (`method/02-stores-model.md`).
 
 ## Commands (the on-demand entry points)
