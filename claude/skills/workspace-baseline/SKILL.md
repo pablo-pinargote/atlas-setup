@@ -5,7 +5,7 @@ description: Use when bootstrapping a new Atlas (symlink-aggregator project root
 
 # workspace-baseline
 
-The canonical Atlas framework (architecture + bootstrap recipe) lives in the **Atlas framework doc**, fetched via `~/.claude/atlas-fetch.sh` from the source configured in `~/.claude/atlas-source` (the official site `https://atlas.paranoid.software`, or a local clone). This skill is the entry point: fetch the framework, then act.
+The canonical Atlas framework (architecture + bootstrap recipe) lives in the **Atlas framework doc**, fetched via `~/.claude/atlas-fetch.sh` from the source configured in `~/.claude/atlas-source` — the official site `https://atlas.paranoid.software`, or `http://localhost:8088` for local dev, or a local clone. This skill is the entry point: fetch the framework, then act.
 
 > **Memory store & deviations are not wired up yet** in this baseline setup. The framework describes a *required* cross-tool memory store (and an optional candidates-promotion flow); configuring one is a later step. For now, universal-rule promotion and the `DEVIATIONS` workflow are deferred.
 
@@ -22,12 +22,12 @@ bash ~/.claude/atlas-fetch.sh method/06-bootstrap.md   # a specific piece
 Returns the Atlas framework:
 
 - **The Atlas model** (`method/01-the-atlas.md`) — an **Atlas** is a symlink-aggregator project root; why it exists.
-- **The stores model** (`method/02-stores-model.md`) — where each kind of knowledge lives; the decision tree.
+- **The stores model** (`method/02-stores-model.md`) — where each kind of knowledge lives; the required shared MCP memory store; the universal-only boundary; the decision tree.
 - **Atlas anatomy** (`method/03-atlas-anatomy.md`) — the root files of record (incl. `STATUS.md`), naming, the per-repo orientation block.
 - **The SPEC lifecycle** (`method/04-spec-lifecycle.md`) — READY → IN PROGRESS → IN REVIEW → CLOSED → archived. CLOSED = verified in the code + a commit + the human says close. A SPEC = what + Plan (the route only); no state, no how, no code, no checkboxes, no findings — blockers, misconceptions, wrongly-posed parts go to `SPEC_NNNN_FINDINGS.md`. The how is decided live and its record is the code. Resume from `STATUS → Active` (Done / Next / Blocked).
-- **The discipline** (`method/05-discipline.md`) — the cadence (git flow in its steps: branch from `develop`, back to `develop`, never `main`), the drift signals, pausing and resuming a SPEC; the human gates; one branch per SPEC; small deliverable specs; independent review in the code before close; clean baseline; commit-message hygiene; no archaeology (files of record are snapshots, never logs).
+- **The discipline** (`method/05-discipline.md`) — the cadence (git flow in its steps: branch from `develop`, back to `develop`, never `main`), the drift signals, pausing and resuming a SPEC; sessions are disposable — decisions written when taken, one fresh session per SPEC (or per large block of it), the Active block as the handoff; the human gates; one branch per SPEC; small deliverable specs; independent review in the code before close; clean baseline; commit-message hygiene; no archaeology (files of record are snapshots, never logs).
 - **The bootstrap recipe + Atlas `CLAUDE.md` template** (`method/06-bootstrap.md`).
-- **Optional git-versioning** (`method/07-optional-git-versioning.md`).
+- **Sharing an Atlas** (`method/07-sharing-an-atlas.md`) — git is how an Atlas is shared; never the symlinks.
 
 ## Step 2 — apply per the framework
 
