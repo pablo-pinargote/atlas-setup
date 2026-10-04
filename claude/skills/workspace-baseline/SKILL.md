@@ -1,13 +1,11 @@
 ---
 name: workspace-baseline
-description: Use when bootstrapping a new Atlas (symlink-aggregator project root), editing CLAUDE.md / STATUS.md / BACKLOG.md / DEVIATIONS.md / SPEC_*.md / DRAFT_*.md / _archived/, deciding where a piece of knowledge belongs across the stores, or auditing the user-global setup. The canonical Atlas framework (architecture + bootstrap recipe) lives in the Atlas framework doc, fetched via `~/.claude/atlas-fetch.sh`. This skill is the entry point — fetch the framework, then act.
+description: Use when bootstrapping a new Atlas (symlink-aggregator project root), editing CLAUDE.md / STATUS.md / BACKLOG.md / SPEC_*.md / DRAFT_*.md / _archived/ / the coding-rules plugin files, deciding where a piece of knowledge belongs across the stores, or auditing the user-global setup. The canonical Atlas framework (architecture + bootstrap recipe) lives in the Atlas framework doc, fetched via `~/.claude/atlas-fetch.sh`. This skill is the entry point — fetch the framework, then act.
 ---
 
 # workspace-baseline
 
 The canonical Atlas framework (architecture + bootstrap recipe) lives in the **Atlas framework doc**, fetched via `~/.claude/atlas-fetch.sh` from the source configured in `~/.claude/atlas-source` — the official site `https://atlas.paranoid.software`, or `http://localhost:8088` for local dev, or a local clone. This skill is the entry point: fetch the framework, then act.
-
-> **Memory store & deviations are not wired up yet** in this baseline setup. The framework describes a *required* cross-tool memory store (and an optional candidates-promotion flow); configuring one is a later step. For now, universal-rule promotion and the `DEVIATIONS` workflow are deferred.
 
 ## Step 1 — load the framework definition
 
@@ -22,7 +20,7 @@ bash ~/.claude/atlas-fetch.sh method/06-bootstrap.md   # a specific piece
 Returns the Atlas framework:
 
 - **The Atlas model** (`method/01-the-atlas.md`) — an **Atlas** is a symlink-aggregator project root; why it exists.
-- **The stores model** (`method/02-stores-model.md`) — where each kind of knowledge lives; the required shared MCP memory store; the universal-only boundary; the decision tree.
+- **The stores model** (`method/02-stores-model.md`) — where each kind of knowledge lives; the `coding-rules` plugin each Atlas chooses (source `mcp:<server>` or `file:<path>`, with `CODING_RULES_CANDIDATES.md` and `CODING_RULES_DEVIATIONS.md`); the universal-only boundary; the decision tree.
 - **Atlas anatomy** (`method/03-atlas-anatomy.md`) — the root files of record (incl. `STATUS.md`), naming, the per-repo orientation block.
 - **The SPEC lifecycle** (`method/04-spec-lifecycle.md`) — READY → IN PROGRESS → IN REVIEW → CLOSED → archived. CLOSED = verified in the code + a commit + the human says close. A SPEC = what + Plan (the route only); no state, no how, no code, no checkboxes, no findings — blockers, misconceptions, wrongly-posed parts go to `SPEC_NNNN_FINDINGS.md`. The how is decided live and its record is the code. Resume from `STATUS → Active` (Done / Next / Blocked).
 - **The discipline** (`method/05-discipline.md`) — the cadence (git flow in its steps: branch from `develop`, back to `develop`, never `main`), the drift signals, pausing and resuming a SPEC; sessions are disposable — decisions written when taken, one fresh session per SPEC (or per large block of it), the Active block as the handoff; the human gates; one branch per SPEC; small deliverable specs; independent review in the code before close; clean baseline; commit-message hygiene; no archaeology (files of record are snapshots, never logs).
@@ -32,15 +30,16 @@ Returns the Atlas framework:
 ## Step 2 — apply per the framework
 
 - **Bootstrapping a new Atlas** → follow the recipe (`method/06-bootstrap.md`).
-- **Modifying any Atlas root file of record** (`CLAUDE.md`, `STATUS.md`, `BACKLOG.md`, `SPEC_*.md`, `DRAFT_*.md`, `DEVIATIONS.md`, `_archived/`) → consult the stores model / anatomy (`method/02`, `method/03`) for what goes in each. `STATUS.md` = the living "where we are", injected at session start by the `session-orient.sh` hook; CLAUDE.md = static orientation/why.
+- **Modifying any Atlas root file of record** (`CLAUDE.md`, `STATUS.md`, `BACKLOG.md`, `SPEC_*.md`, `DRAFT_*.md`, `_archived/`, and the plugin files `CODING_RULES_CANDIDATES.md` / `CODING_RULES_DEVIATIONS.md`) → consult the stores model / anatomy (`method/02`, `method/03`) for what goes in each. `STATUS.md` = the living "where we are", injected at session start by the `session-orient.sh` hook; CLAUDE.md = static orientation/why.
 - **Before writing any code**, place yourself in the cadence (`method/05-discipline.md`): is there a SPEC in `STATUS → Active`, and are you on its branch? Check the other drift signals in `05` too. If one shows, say so once and follow the human's call.
+- **If the Atlas declares `coding-rules`** (`[plugins.coding-rules]` in `_settings/atlas.toml`), recall the rules from its source before writing code; candidate rules go to `CODING_RULES_CANDIDATES.md`, never straight to the source.
 - **Deciding where a piece of knowledge belongs** → use the decision tree in the stores model (`method/02-stores-model.md`).
 
 ## Commands (the on-demand entry points)
 
 Two user-global slash commands operate on an Atlas; both are thin wrappers that fetch and follow the canonical recipe/model in the Atlas framework (`atlas-fetch.sh`):
 
-- **`/atlas-init`** — bootstrap the current directory as a new Atlas (discovers symlinks, creates `CLAUDE.md` with per-repo blocks, `.claude/settings.local.json`, `STATUS.md`, `BACKLOG.md`, `DEVIATIONS.md`, `_archived/`). Pre-flight stops if a baseline already exists or there are no symlinks.
+- **`/atlas-init`** — bootstrap the current directory as a new Atlas (discovers symlinks, creates `CLAUDE.md` with per-repo blocks, `.claude/settings.local.json`, `STATUS.md`, `BACKLOG.md`, `_archived/`). Pre-flight stops if a baseline already exists or there are no symlinks.
 - **`/atlas-sync`** — checkpoint an existing Atlas: refresh `STATUS.md` (rewrite each in-flight SPEC's Active block — Done / Next / Blocked; move closed SPECs to Recently closed), reconcile the repo set (add/remove per-repo blocks — sync owns this, init does not), lint SPECs for contamination (state, checkboxes, code, how, archaeology), and update `CLAUDE.md` only if a standing fact changed.
 
 Memory mechanism: a `SessionStart` hook (`session-orient.sh`) injects `STATUS.md` at start; a `Stop` hook (`atlas-sync-reminder.sh`) nudges the agent to offer `/atlas-sync` when `STATUS.md` goes stale (throttled). There is no automatic write — checkpointing is deliberate.

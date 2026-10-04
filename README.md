@@ -8,8 +8,9 @@ back it up first — nothing here overwrites your existing Claude Code config.
 > projects — any agent opens a project cold and knows what it is, where it lives, where the work
 > stands, and how work gets closed. Full framework: **https://atlas.paranoid.software**.
 
-> **Deferred (later guide):** the shared **memory store** and the **DEVIATIONS** workflow. The
-> Atlas lifecycle works fully without them.
+> **Coding rules:** each Atlas may choose a shared coding-rules memory with
+> `atlas plugin add coding-rules mcp:<server>` (or `file:<path>`); the Atlas works fully without
+> one.
 
 ---
 
@@ -253,7 +254,7 @@ This creates `~/workspaces/demo/_first/` with a symlink to each repo.
 ```
 
 It fetches the recipe from the framework and creates `CLAUDE.md` (a per-repo block per symlink),
-`STATUS.md`, `BACKLOG.md`, `DEVIATIONS.md`, `_archived/`, `.claude/settings.local.json`, and
+`STATUS.md`, `BACKLOG.md`, `_archived/`, `.claude/settings.local.json`, and
 `.vscode/settings.json` (so VS Code and Cursor show each repo in Source Control — reload the
 window once).
 
@@ -275,8 +276,8 @@ If you also use **Cursor**, you don't configure anything for Atlas there. Recent
 
 They show up under **"Claude User config"** in Cursor's *Settings → Hooks* and *Rules, Skills,
 Subagents* tabs. **Do not copy these into `~/.cursor/`** — that just creates duplicates. The one
-thing that is per-tool is the memory store: when you set up coco/mem0 later, add it to Cursor's
-own MCP config (`~/.cursor/mcp.json`) too.
+thing that is per-tool is the MCP server behind an Atlas's `coding-rules` plugin (e.g. coco):
+add it to Cursor's own MCP config (`~/.cursor/mcp.json`) too.
 
 > Quick check it's live: open an Atlas in Cursor, start a new Agent chat, and ask "what's the
 > state of this Atlas?" without giving context — it should already know from `STATUS.md`.
