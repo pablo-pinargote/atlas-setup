@@ -8,6 +8,22 @@ ctx="SESSION START — Orient before doing substantive work: read CLAUDE.md in f
 
 CADENCE — follow the Atlas cadence (method/05-discipline.md): bounded SPEC -> its branch from develop -> step by step with the how approved by the human -> findings beside the SPEC -> independent review -> the human commits and closes. If you see a drift signal (code requested with no SPEC in STATUS Active; two SPECs in progress and not paused in one repo; work outside the SPEC branch or on main; a step coded without its how approved; a close without independent review or commit), say so ONCE, then follow the human's call. The human runs every git command; give them the exact command. Sessions are disposable: write a decision where it belongs (CLAUDE.md, the SPEC, its findings or the backlog) the moment it is taken — except the how, whose record is the code; one fresh session per SPEC (or per large block of it), and before stopping rewrite its Active block as the handoff."
 
+settings=_settings/atlas.toml
+header='^[[:space:]]*\[[[:space:]]*plugins\."?coding-rules"?[[:space:]]*\]'
+if [ -f "$settings" ] && tr -d '\r' < "$settings" | grep -Eq "$header"; then
+    source=$(tr -d '\r' < "$settings" | awk -v h="$header" '
+        $0 ~ h { inside = 1; next }
+        inside && /^[[:space:]]*\[/ { exit }
+        inside && match($0, /^[[:space:]]*source[[:space:]]*=[[:space:]]*["\047][^"\047]*["\047]/) {
+            value = substr($0, RSTART, RLENGTH); sub(/^[^"\047]*["\047]/, "", value); sub(/["\047]$/, "", value); print value; exit
+        }')
+    [ -n "$source" ] || source="(unreadable — check [plugins.coding-rules] in _settings/atlas.toml)"
+    ctx="$ctx"$'\n\n'"CODING RULES — this Atlas declares the coding-rules plugin with source \"$source\" (an mcp:<server> source is queried through that MCP server's tools; a file:<path> source is read from the Atlas). Recall the rules for the area from it before writing code, and follow them. A candidate rule goes to CODING_RULES_CANDIDATES.md and is promoted to the source only in a dedicated session with the human's approval — never written to the source mid-task. A deliberate divergence goes to CODING_RULES_DEVIATIONS.md."
+    if [ -f CODING_RULES_DEVIATIONS.md ]; then
+        ctx="$ctx"$'\n\n'"=== CODING_RULES_DEVIATIONS.md — deviations in force ==="$'\n'"$(cat CODING_RULES_DEVIATIONS.md)"
+    fi
+fi
+
 if [ -f STATUS.md ]; then
     ctx="$ctx"$'\n\n'"=== STATUS.md — current state & next steps (read this first) ==="$'\n'"$(cat STATUS.md)"
 fi
