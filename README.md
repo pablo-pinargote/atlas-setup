@@ -1,317 +1,124 @@
-# Atlas — partner setup guide (macOS + Windows)
+# Atlas — setup guide (macOS + Windows)
 
-A **manual, copy-paste** setup. No install script: every step is a command you run yourself,
-so you see exactly what it does. The only file you edit by hand is `settings.json`, and you
-back it up first — nothing here overwrites your existing Claude Code config.
+How to get a machine ready to work with Atlas, and how to create or join an Atlas.
 
-> **What Atlas is:** a tool-agnostic, spec-driven way to run large, multi-repo, AI-assisted
-> projects — any agent opens a project cold and knows what it is, where it lives, where the work
-> stands, and how work gets closed. Full framework: **https://atlas.paranoid.software**.
-
-> **Coding rules:** each Atlas may choose a shared coding-rules memory with
-> `atlas plugin add coding-rules mcp:<server>` (or `file:<path>`); the Atlas works fully without
-> one.
+> **What Atlas is:** a Claude-anchored, spec-driven way to keep the context of real software
+> projects — one folder per project, its sources linked by symlink, so any agent opens it cold
+> and knows what it is, where each source lives, where the work stands and how it gets closed.
+> Full framework: **https://atlas.paranoid.software**.
 
 ---
 
-## 0. Before you start — prerequisites
+## 1. Prerequisites
 
-> **Windows users:** do **everything** below in **Git Bash** (installed with Git for Windows),
-> not PowerShell/cmd. The Atlas tooling is bash + `jq`/`curl`, and Claude Code runs the hooks
-> through Git Bash. Install tools with `winget` in PowerShell, then **reopen Git Bash**.
+> **Windows users:** run everything below in **Git Bash** (installed with Git for Windows), not
+> PowerShell or cmd: the Atlas hooks are bash scripts, and Claude Code runs them through Git
+> Bash. Install tools with `winget` in PowerShell, then **reopen Git Bash**.
 
-Install these once:
-
-| Tool | What it's for here | macOS (Terminal) | Windows (PowerShell, then reopen Git Bash) |
+| Tool | What it's for | macOS | Windows (PowerShell, then reopen Git Bash) |
 |---|---|---|---|
-| **Git** (+ Git Bash) | Clone the framework (option B). On **Windows**, Git Bash is the shell that runs the Atlas hooks and scripts. | `brew install git` | `winget install Git.Git` |
-| **jq** | A small command-line **JSON tool**. Claude Code passes each hook a blob of JSON (the prompt, session info); the hooks use `jq` to read it and to build their JSON reply. You also use `jq` to check `settings.json` is valid. Without it, the hooks fail. | `brew install jq` | `winget install jqlang.jq` |
-| **Python 3** | Runs the generator (`gen_workspaces.py`) that turns a `.code-workspace` into the Atlas's symlink folder. | `brew install python` (or preinstalled) | `winget install Python.Python.3.12` |
+| **Git** (+ Git Bash) | Sources and shared Atlases are git repos; on Windows, Git Bash runs the hooks. | `brew install git` | `winget install Git.Git` |
+| **jq** | The hooks read and write JSON with it. Without it, they fail. | `brew install jq` | `winget install jqlang.jq` |
+| **uv** | Installs the `atlas` CLI with its own Python. | `brew install uv` | `winget install astral-sh.uv` |
+| **Claude Code** | The anchor agent. | see claude.com/claude-code | see claude.com/claude-code |
 
-**Windows only — allow symlinks:** Settings → *Privacy & security* → *For developers* →
-turn **Developer Mode ON**. (Lets the generator create symlinks without admin.)
+**Windows only — allow symlinks:** Settings → *Privacy & security* → *For developers* → turn
+**Developer Mode ON**, so `atlas link` can create symlinks without admin rights.
 
-Check everything is there (Terminal / Git Bash):
-
-```bash
-git --version
-jq --version
-claude --version
-python3 --version || python --version
-```
-
-*Each line prints a version number — that's how you confirm the tool is installed and on your
-PATH. (`||` means "try `python3`; if it's missing, try `python`.")*
-
-You also need **this `atlas-setup` folder** on your machine and **your repos already cloned**.
-
----
-
-## 1. Create the workspaces folder
-
-Run in Terminal / Git Bash:
+Check:
 
 ```bash
-mkdir -p ~/workspaces
+git --version && jq --version && uv --version && claude --version
 ```
-*`mkdir -p` makes the folder; `-p` means "don't error if it already exists, create parents as needed."*
 
-Create its `.gitignore` (generated Atlas folders and local junk):
+## 2. Install the CLI
 
 ```bash
-printf '_*/\n.venv/\n.idea/\n' > ~/workspaces/.gitignore
+uv tool install paranoid-atlas-cli
 ```
-*`printf … > file` writes those lines into a file. This tells git to ignore the generated
-`_<name>/` Atlas folders (they're just symlinks, rebuilt by the generator).*
 
-**Model:** under `workspaces/` you make a subfolder per concept; inside it a `.code-workspace`
-file lists the repos for a task; the generator turns that into a `_<name>/` folder of symlinks —
-**that folder is your Atlas.**
+The command is `atlas`; `atlas --version` confirms it. If the shell can't find it, run
+`uv tool update-shell` and open a new terminal. Upgrade later with
+`uv tool install --reinstall paranoid-atlas-cli`.
 
-## 2. Copy the generator
-
-First go into this `atlas-setup` folder (so the copy commands are simple). Replace the path with
-where you put it:
+## 3. Install the Atlas machinery for Claude Code
 
 ```bash
-cd ~/atlas-setup     # ← wherever this folder lives on your machine
+atlas setup claude
 ```
 
-Copy the generator into the workspaces folder:
+It installs the hooks, the `/atlas-init` and `/atlas-sync` commands and the `workspace-baseline`
+skill into `~/.claude` (or `CLAUDE_CONFIG_DIR` when set), wires the three hooks into
+`settings.json` without touching anything else there, and creates `atlas-source` pointing at the
+official site when there is none. Run it again after every CLI upgrade; it only changes what
+differs.
+
+**Where the framework comes from:** `atlas-source` holds one line — a URL (the official site, or
+a local copy of it served on `http://localhost:8088`) or the path of a local clone of the
+framework repo. A clone serves the `method/*.md` pages only — its index is `method/README.md`;
+the `llms.txt` index the agent starts from is generated by the site. To change it:
 
 ```bash
-cp gen_workspaces.py ~/workspaces/
+printf '%s\n' "http://localhost:8088" > "${CLAUDE_CONFIG_DIR:-$HOME/.claude}/atlas-source"
 ```
-*`cp <source> <dest>` copies a file. This places the generator where you'll run it from.*
 
-## 3. Pick the framework source
+With `CLAUDE_CONFIG_DIR` set, every `~/.claude/…` path in the machinery lives under that folder
+instead.
 
-You'll set this in step 4. Choose **one**:
+## 4. Create an Atlas
 
-- **A — Public site:** `https://atlas.paranoid.software`
-- **B — Local clone** *(recommended for the workshop — works offline):*
-  ```bash
-  git clone https://github.com/paranoid-software/atlas.git ~/atlas
-  ```
-  The source is then the folder path: `~/atlas`
-
-## 4. Install the Atlas machinery (manual)
-
-Still inside the `atlas-setup` folder. Each command copies one known thing to one known place.
-
-**4.1 — Make the folders** inside your Claude Code config dir (`~/.claude/`):
+Make a folder for the project and, inside it:
 
 ```bash
-mkdir -p ~/.claude/hooks ~/.claude/commands ~/.claude/skills/workspace-baseline
+atlas init
 ```
 
-**4.2 — Copy the files.** Each line copies one piece into `~/.claude/`: the **fetch helper**
-(reads the framework), the **3 hooks**, the **2 slash-commands** (`/atlas-init`, `/atlas-sync`),
-and the **skill** that routes Atlas work. Nothing here touches your existing files.
+Then link each source — a repo or folder that lives anywhere on your machine:
 
 ```bash
-cp claude/atlas-fetch.sh                              ~/.claude/   # reads atlas-source, fetches framework files
-cp claude/hooks/session-orient.sh                     ~/.claude/hooks/   # shows STATUS.md at session start
-cp claude/hooks/atlas-sync-reminder.sh                ~/.claude/hooks/   # nudges /atlas-sync when STATUS is stale
-cp claude/hooks/skill-reminder-workspace-baseline.sh  ~/.claude/hooks/   # routes Atlas prompts to the skill
-cp claude/commands/atlas-init.md                      ~/.claude/commands/   # the /atlas-init command
-cp claude/commands/atlas-sync.md                      ~/.claude/commands/   # the /atlas-sync command
-cp claude/skills/workspace-baseline/SKILL.md          ~/.claude/skills/workspace-baseline/   # the entry-point skill
+atlas link <name> <path>
 ```
 
-**4.3 — Set the framework source** — one line, pick the value from step 3:
+And check them:
 
 ```bash
-# Public site:
-printf '%s\n' 'https://atlas.paranoid.software' > ~/.claude/atlas-source
-
-# …OR the local clone (use the real absolute path — see step 6 for how to get one):
-printf '%s\n' "$HOME/atlas" > ~/.claude/atlas-source
-```
-*Run **only one** of the two. This writes a single line into `~/.claude/atlas-source` — the one
-place that says where the framework lives. `atlas-fetch` reads that line: if it starts with
-`http` it downloads with `curl`; otherwise it treats it as a local folder and reads with `cat`.*
-
-Test it before going further:
-
-```bash
-bash ~/.claude/atlas-fetch.sh llms.txt | head -3
-```
-*`atlas-fetch.sh llms.txt` asks the framework for its index file; `head -3` shows the first 3
-lines. This is exactly how the Atlas commands read the framework — if it works here, they work.*
-
-You should see the framework index. If you get a `configure ~/.claude/atlas-source` error or a
-timeout, fix the source line above (the clone path is the most reliable).
-
-## 5. Add the 3 hooks to `settings.json` (by hand)
-
-**5.1 — Back it up first** (so you can always undo):
-
-```bash
-cp ~/.claude/settings.json ~/.claude/settings.json.bak 2>/dev/null || echo "{}" > ~/.claude/settings.json
-```
-*Copies your current settings to a `.bak` you can restore from. If you don't have a
-`settings.json` yet, the `|| …` part creates an empty one (`{}`) so the next steps have a file
-to edit.*
-
-**5.2 — Open it** in your editor:
-
-```bash
-code ~/.claude/settings.json      # VS Code; or open it with any text editor
+atlas doctor
 ```
 
-**5.3 — Add two things**, keeping everything you already have:
+In Claude Code, `/atlas-init` does the same with you and then writes each source's orientation
+block in `CLAUDE.md`. If the project shares coding rules through a memory server, declare it:
+`atlas plugin add coding-rules mcp:<server>` (or `file:<path to a .md in the Atlas>`).
 
-**(a)** ensure this key exists at the top level (add it if missing — it's the framework
-recommendation; leave it as-is if you intentionally use auto-memory):
+An Atlas created before `_settings/` existed is brought to the current model with
+`atlas migrate` (shows the plan) and `atlas migrate --apply`.
 
-```json
-"autoMemoryEnabled": false,
-```
+## 5. Join a shared Atlas
 
-**(b)** add the three hooks. **If you have NO `"hooks"` section yet**, paste this whole block:
+Clone it anywhere, then run `atlas doctor` inside it: it lists every source missing on this
+machine with the exact commands to get it and link it. Run them, and `atlas doctor` again until
+everything is `ok`.
 
-```json
-"hooks": {
-  "SessionStart": [
-    { "hooks": [ { "type": "command", "command": "bash \"$HOME/.claude/hooks/session-orient.sh\"" } ] }
-  ],
-  "Stop": [
-    { "hooks": [ { "type": "command", "command": "bash \"$HOME/.claude/hooks/atlas-sync-reminder.sh\"" } ] }
-  ],
-  "UserPromptSubmit": [
-    { "hooks": [ { "type": "command", "command": "bash \"$HOME/.claude/hooks/skill-reminder-workspace-baseline.sh\"" } ] }
-  ]
-}
-```
+## 6. Day to day
 
-**If you ALREADY have a `"hooks"` section**, don't replace it — just add **one entry** into each
-of the three arrays (create the array if that event isn't there). For example, an existing
-`SessionStart` becomes:
+- **Session start:** the hook gives the agent `STATUS.md` and `atlas status`, so it never starts
+  cold.
+- **Where things stand:** `atlas status`; **sources in order:** `atlas doctor`.
+- **Checkpoint:** `/atlas-sync` in Claude Code.
 
-```json
-"SessionStart": [
-  { "hooks": [ { "type": "command", "command": "your-existing-hook" } ] },
-  { "hooks": [ { "type": "command", "command": "bash \"$HOME/.claude/hooks/session-orient.sh\"" } ] }
-]
-```
+## 7. Cursor
 
-**5.4 — Save**, and confirm it's valid JSON:
-
-```bash
-jq . ~/.claude/settings.json >/dev/null && echo "settings.json OK"
-```
-*`jq .` parses the file and re-prints it; `>/dev/null` hides that output, so you only see
-`settings.json OK` if it parsed. This catches typos before Claude Code chokes on them.*
-
-If `jq` reports an error, you have a typo (usually a missing or extra comma) — fix it or restore
-the backup: `cp ~/.claude/settings.json.bak ~/.claude/settings.json`.
-
-## 6. Create your first Atlas
-
-**6.1 — Get your repos' absolute paths.** In Terminal / Git Bash, `cd` into each repo and run
-`pwd`:
-
-```bash
-cd /path/to/your/repo-a && pwd
-```
-*`cd` moves into the folder; `pwd` ("print working directory") prints its full absolute path —
-that exact string is what the `.code-workspace` needs.*
-- macOS prints e.g. `/Users/you/repo-a`
-- Windows Git Bash prints e.g. `/c/Users/you/repo-a`
-- (Shortcut on macOS: drag the folder onto the Terminal window to paste its path.)
-
-**6.2 — Write a `.code-workspace`** listing those paths:
-
-```bash
-mkdir -p ~/workspaces/demo
-cat > ~/workspaces/demo/first.code-workspace <<'EOF'
-{
-  "folders": [
-    { "path": "/Users/you/repo-a" },
-    { "path": "/Users/you/repo-b" }
-  ]
-}
-EOF
-```
-*`cat > file <<'EOF' … EOF` writes everything between the two `EOF` markers into the file. (Or
-just create the file in a text editor and paste the JSON.) Replace the two paths with what `pwd`
-gave you.*
-
-**6.3 — Generate the Atlas** (`python3` on macOS; `python` on Windows if `python3` isn't found):
-
-```bash
-cd ~/workspaces
-python3 gen_workspaces.py demo/first.code-workspace
-```
-
-This creates `~/workspaces/demo/_first/` with a symlink to each repo.
-
-**6.4 — Bootstrap it in Claude Code.** Open `demo/_first/` in Claude Code and run:
-
-```
-/atlas-init
-```
-
-It fetches the recipe from the framework and creates `CLAUDE.md` (a per-repo block per symlink),
-`STATUS.md`, `BACKLOG.md`, `_archived/`, `.claude/settings.local.json`, and
-`.vscode/settings.json` (so VS Code and Cursor show each repo in Source Control — reload the
-window once).
-
-## 7. Day to day
-
-- **Session start** auto-shows `STATUS.md` so you never start cold (the `session-orient` hook).
-- **Added/removed a repo?** Edit the `.code-workspace`, re-run `python3 gen_workspaces.py …`,
-  then run `/atlas-sync` (it reconciles the repo set; `/atlas-init` does not).
-- **Checkpoint progress:** `/atlas-sync` regenerates `STATUS.md`.
-
-## 8. Using Atlas from Cursor (no extra setup)
-
-If you also use **Cursor**, you don't configure anything for Atlas there. Recent Cursor reads
-**Claude Code's config from `~/.claude/`** — so once you've done step 4, Cursor automatically gets:
-
-- the **hooks** (incl. `session-orient`, so it opens an Atlas already oriented),
-- the **commands** (`/atlas-init`, `/atlas-sync`),
-- the **skill** (`workspace-baseline`).
-
-They show up under **"Claude User config"** in Cursor's *Settings → Hooks* and *Rules, Skills,
-Subagents* tabs. **Do not copy these into `~/.cursor/`** — that just creates duplicates. The one
-thing that is per-tool is the MCP server behind an Atlas's `coding-rules` plugin (e.g. coco):
-add it to Cursor's own MCP config (`~/.cursor/mcp.json`) too.
-
-> Quick check it's live: open an Atlas in Cursor, start a new Agent chat, and ask "what's the
-> state of this Atlas?" without giving context — it should already know from `STATUS.md`.
-
----
+Cursor reads Claude Code's configuration from `~/.claude`: once step 3 is done, it gets the
+hooks, the commands and the skill — don't copy them into `~/.cursor/`. The one thing to add on
+Cursor's side is the MCP server behind an Atlas's `coding-rules` plugin, if it has one, in
+`~/.cursor/mcp.json`.
 
 ## Troubleshooting
 
 | Symptom | Fix |
 |---|---|
-| `configure ~/.claude/atlas-source` | Re-do step 4.3 with a valid URL or clone path. |
-| `jq: command not found` | Install jq (step 0); on Windows **reopen Git Bash** after installing. |
-| Hooks do nothing on Windows | You're not in **Git Bash**, or Git for Windows isn't installed (step 0). |
-| `gen_workspaces.py` symlink error (Windows) | Turn on **Developer Mode** (step 0), then re-run. |
-| Public URL times out | Use the **local clone** (step 3B) and redo step 4.3. |
-| Broke `settings.json` | `cp ~/.claude/settings.json.bak ~/.claude/settings.json` |
-
-## What's in this folder
-
-```
-atlas-setup/
-├── README.md                  ← this guide
-├── gen_workspaces.py          ← the Atlas generator (you copy it in step 2)
-└── claude/                    ← Claude Code machinery (step 4) — Cursor inherits it via interop
-    ├── atlas-fetch.sh
-    ├── atlas-source.example   ← reference only (step 4.3 creates the real one)
-    ├── hooks/                 ← session-orient · atlas-sync-reminder · skill-reminder
-    ├── commands/              ← /atlas-init · /atlas-sync
-    └── skills/workspace-baseline/SKILL.md
-```
-
-## Which tools need what
-
-| Tool | coco (MCP) | hooks / commands / skills | Setup needed |
-|---|---|---|---|
-| **Claude Code** | its own config | native (`~/.claude/`) | steps 1–7 |
-| **Cursor** | its own config | **inherits Claude's** via interop | nothing (just verify) |
+| `atlas: command not found` | `uv tool update-shell`, then a new terminal. |
+| `atlas-fetch: configure …/atlas-source` | Re-run `atlas setup claude`, or write a URL or clone path into that file. |
+| `jq: command not found` | Install jq (step 1); on Windows, reopen Git Bash afterwards. |
+| Hooks do nothing on Windows | Not in Git Bash, or Git for Windows isn't installed (step 1). |
+| `atlas link` can't create the symlink (Windows) | Turn Developer Mode on (step 1). |
+| The site doesn't answer | Serve the framework locally and point `atlas-source` at it (step 3). |
