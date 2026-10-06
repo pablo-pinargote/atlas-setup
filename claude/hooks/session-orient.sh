@@ -24,6 +24,13 @@ if [ -f "$settings" ] && tr -d '\r' < "$settings" | grep -Eq "$header"; then
     fi
 fi
 
+if [ -f "$settings" ] && command -v atlas >/dev/null 2>&1; then
+    state=$(atlas status 2>/dev/null)
+    if [ -n "$state" ]; then
+        ctx="$ctx"$'\n\n'"=== atlas status — where the Atlas and its sources stand ==="$'\n'"$state"
+    fi
+fi
+
 if [ -f STATUS.md ]; then
     ctx="$ctx"$'\n\n'"=== STATUS.md — current state & next steps (read this first) ==="$'\n'"$(cat STATUS.md)"
 fi
